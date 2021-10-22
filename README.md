@@ -1,6 +1,6 @@
-- first, object tracker (norfair openpose)
-- then, face detector (opencv/bounding box/etc.)
-- image classifier with augmentations (2 efficient net/2 dense net)
+- First, object tracker (norfair openpose)
+- Then, face detector (opencv/bounding box/etc.)
+- Image classifier with augmentations (2 efficient net/2 dense net)
 - for each person, 
 - "self-annotating retrospective training"
     - inspired from tesla's auto-driving solution
