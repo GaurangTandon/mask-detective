@@ -1,0 +1,22 @@
+- first, object tracker (norfair openpose)
+- then, face detector (opencv/bounding box/etc.)
+- image classifier with augmentations (2 efficient net/2 dense net)
+- for each person, 
+- "self-annotating retrospective training"
+    - inspired from tesla's auto-driving solution
+    - use the annotations from the future frames to fix our previous mistakes
+- self-reinforced training on the bad samples
+    - fine tunes on its own in the wild
+    - our model is already very good: 
+- future work:
+    - corrections to various kind of picture captures
+    - for example: fisheye lens effect/exposure quality
+
+resources
+- https://tryolabs.com/blog/2020/07/09/face-mask-detection-in-street-camera-video-streams-using-ai-behind-the-curtain
+- https://github.com/tryolabs/norfair
+- https://github.com/chandrikadeb7/Face-Mask-Detection
+- https://www.videvo.net/video/long-shot-of-people-wearing-face-masks-walking-down-busy-street-in-oxford-england/608535/
+- https://www.pyimagesearch.com/2020/05/04/covid-19-face-mask-detector-with-opencv-keras-tensorflow-and-deep-learning/
+- https://megathon.hackerearth.com/challenges/hackathon/megathon-draft/custom-tab/problem-statement
+- https://www.youtube.com/watch?v=g6bOwQdCJrc
