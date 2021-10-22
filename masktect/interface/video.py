@@ -9,6 +9,13 @@ class ImageSequence:
         self.images: typing.List[np.ndarray] = []
         self.shape = shape
 
+    def transform(self, transformer: typing.Callable):
+        """Transforms all the images in the sequence using the given function
+        :param transformer: Function that takes an image and returns transformed image
+        """
+        for idx in range(len(self.images)):
+            self.images[idx] = transformer(self.images[idx])
+
     def from_video(self, filename: str) -> "ImageSequence":
         """Generates the sequence of images from a given .mp4 file
         :param filename: The name of the file from which to generate the images

@@ -1,6 +1,7 @@
 import argparse
 
 from .interface.video import ImageSequence
+from .tracker.find_faces import find_faces
 
 
 if __name__ == "__main__":
@@ -10,5 +11,6 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     data = ImageSequence().from_video(args.video)
+    data.transform(find_faces)
     data.to_video(args.video[:-4] + "_processed.avi")
     data.render()
