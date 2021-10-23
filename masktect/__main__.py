@@ -11,7 +11,7 @@ if __name__ == "__main__":
         "--video", metavar="V", type=str, help="the video that needs to processed"
     )
     args = parser.parse_args()
-    data = ImageSequence().from_video(args.video)
+    data = ImageSequence().from_video(args.video, 5)
     data.transform(find_faces)
     data.to_video(args.video[:-4] + "_processed.avi")
     with open('data/video/oxford_1_info.pkl', 'wb') as f:
