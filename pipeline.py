@@ -26,11 +26,15 @@ def read_all_frames(frame_basepath: str):
 VID_WIDTH = 640
 VID_HEIGHT = 480
 
-def take_dist(x1, y1, x2, y2):
+def rel_to_abs(x1, y1, x2, y2):
     x1 *= VID_WIDTH
     x2 *= VID_WIDTH
     y1 *= VID_HEIGHT
     y2 *= VID_HEIGHT
+    return x1, y1, x2, y2
+
+def take_dist(x1, y1, x2, y2):
+    x1, y1, x2, y2 = rel_to_abs(x1, y1, x2, y2)
     return sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
 def get_centroid(box):
@@ -95,11 +99,36 @@ def personalized_data(grouped_frames, total_groupcount):
 
     return group_timestamps
 
+def get_mask_stats(grouped_frames, total_groupcount: int):
+    group_stat = [[0, 0] for _ in range(total_groupcount)]
+
+    # list of (frame number, absolute box coordinate) that
+    # needs detection
+    batch = []
+    MX_BATCH_SIZE = 100
+
+    def add_item(box: List[int]):
+        nonlocal batch
+        result = rel_to_abs(box[1], box[2], box[3], box[4])
+        batch.append((box[-1], *result))
+        if len(batch) == MX_BATCH_SIZE:
+            # call animesh and update group_stat with call result
+            pass
+            batch = []
+
+    for frame in grouped_frames:
+        for box in frame:
+            add_item(box)
+
+    return group_stat
+
 def main():
     video_name = sys.argv[1]
     video_data = read_all_frames(f'labels/{video_name}')
     grouped_frames, total_groupcount = apply_iou(video_data)
     group_timestamps = personalized_data(grouped_frames, total_groupcount)
+    group_mask_stat = get_mask_stats(grouped_frames, total_groupcount)
+    return group_mask_stat, group_timestamps
 
 
 if __name__ == "__main__":
