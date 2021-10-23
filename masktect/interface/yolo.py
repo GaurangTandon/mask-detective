@@ -21,8 +21,8 @@ class Box:
     h: float
     group: int
 
-    def scale_to_image(self, image_shape: typing.Tuple[int, int]):
-        img_width, img_height = image_shape[0], image_shape[1]
+    def scale_to_image(self, image_shape: typing.Tuple[int, int, int]):
+        img_height, img_width, _ = image_shape
 
         x1, y1 = int((self.x - self.w / 2) * img_width), int((self.y - self.h / 2) * img_height)
         x2, y2 = int((self.x + self.w / 2) * img_width), int((self.y + self.h / 2) * img_height)
@@ -67,8 +67,7 @@ class VideoAnnotator:
             with open(frame_path) as f:
                 for line in f:
                     c, x, y, w, h = map(float, line.split(' '))
-                    # FIXME: Something is very wrong in pixel locations
-                    bounding_boxes.append(Box(label=c, x=y, y=x, w=w, h=h, group=0))
+                    bounding_boxes.append(Box(label=c, x=x, y=y, w=w, h=h, group=0))
             return bounding_boxes
 
         frames_with_bounding_boxes = []

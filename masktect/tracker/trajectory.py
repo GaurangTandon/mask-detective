@@ -1,6 +1,7 @@
 from math import sqrt
 import sys
 from typing import List
+from ..interface.yolo import Box
 
 
 def read_frame(frame_path: str):
@@ -43,8 +44,8 @@ def take_dist(x1, y1, x2, y2):
     return sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
 
-def get_centroid(box):
-    return (box[1] + box[3] / 2, box[2] + box[4] / 2)
+def get_centroid(box: Box):
+    return box.x, box.y
 
 
 def apply_iou(video_data):
