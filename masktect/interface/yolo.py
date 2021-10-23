@@ -93,7 +93,8 @@ class VideoAnnotator:
             for box_idx, box in enumerate(frame):
                 image = self.video_sequence.images[frame_idx]
                 (x1, y1), (x2, y2) = box.scale_to_image(image_shape=image.shape)
-                image = image[x1:x2, y1:y2]
+                # print(x1, y1, x2, y2, image.shape)
+                image = image[y1:y2, x1:x2]
                 image = cv.resize(image, (224, 224))
                 batch_images.append(image)
                 batch_indices.append((frame_idx, box_idx))
