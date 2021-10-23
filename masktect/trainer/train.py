@@ -16,6 +16,8 @@ def get_model(cfg):
     # constructor = getattr()
     x = tf.keras.applications.EfficientNetB2(include_top=False, weights='imagenet',
                     input_shape=(cfg['net_size'], cfg['net_size'], 3))(model_input)
+    x = tf.keras.layers.GlobalAveragePooling2D()(x)
+    x = tf.keras.layers.Dropout(0.2)(x)
     x = tf.keras.layers.Dense(1, activation='sigmoid')(x)
     outputs.append(x)
 
@@ -28,12 +30,10 @@ def compile_new_model(cfg):
     with strategy.scope():
         model = get_model(cfg)
 
-        losses = [tf.keras.losses.BinaryCrossentropy(label_smoothing=cfg['label_smooth_fac'])
-                  for i in range(cfg['net_count'])]
-
+        loss = tf.keras.losses.BinaryCrossentropy()
         model.compile(
             optimizer=cfg['optimizer'],
-            loss=losses,
+            loss=loss,
             metrics=[tf.keras.metrics.Accuracy(name='accuracy')])
 
     return model
