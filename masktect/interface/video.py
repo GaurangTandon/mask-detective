@@ -2,10 +2,11 @@ import typing
 
 import numpy as np
 import cv2 as cv
+import tqdm.auto as tqdm
 
 
 class ImageSequence:
-    def __init__(self, shape=(224, 224)):
+    def __init__(self, shape=(800, 400)):
         self.images: typing.List[np.ndarray] = []
         self.shape = shape
 
@@ -13,12 +14,13 @@ class ImageSequence:
         """Transforms all the images in the sequence using the given function
         :param transformer: Function that takes an image and returns transformed image
         """
-        for idx in range(len(self.images)):
+        for idx in tqdm.trange(len(self.images)):
             self.images[idx] = transformer(self.images[idx])
 
-    def from_video(self, filename: str) -> "ImageSequence":
+    def from_video(self, filename: str, drop_rate: int = 5) -> "ImageSequence":
         """Generates the sequence of images from a given .mp4 file
         :param filename: The name of the file from which to generate the images
+        :param drop_rate: Number of frames to out of which we should pick 1
         """
         video = cv.VideoCapture(filename)
         while True:
@@ -27,6 +29,7 @@ class ImageSequence:
                 break
             image = cv.resize(image, self.shape)
             self.images.append(image)
+        self.images = self.images[0:len(self.images):drop_rate]
         return self
 
     def to_video(self, filename: str) -> None:
