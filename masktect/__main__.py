@@ -14,6 +14,7 @@ if __name__ == "__main__":
     data = ImageSequence().from_video(args.video, 5)
     data.transform(find_faces)
     data.to_video(args.video[:-4] + "_processed.avi")
+    data.write_submission(args.video[:-4] + "_submission.txt")
     with open('data/video/oxford_1_info.pkl', 'wb') as f:
         pickle.dump(data.info, f)
     data.render()

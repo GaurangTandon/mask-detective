@@ -32,6 +32,7 @@ class ImageSequence:
             image = cv.resize(image, self.shape)
             self.images.append(image)
         self.images = self.images[0:len(self.images):drop_rate]
+        # self.images = self.images[:50]
         self.info = [dict() for _ in self.images]
         return self
 
@@ -52,3 +53,13 @@ class ImageSequence:
             cv.imshow("frame", self.images[index])
             index += 1
         cv.destroyAllWindows()
+
+    def write_submission(self, path):
+        # top left and bottom right
+        get_placer = lambda box: ",".join(map(str, box))
+        with open(path, 'w') as f:
+            for idx, record in enumerate(self.info):
+                faces = len(record)
+                positions = ";".join(get_placer(data["box"]) for data in record)
+                record_str = f"{idx + 1},0,{faces},0,{positions}\n"
+                f.write(record_str)
