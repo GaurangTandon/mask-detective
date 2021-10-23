@@ -28,4 +28,9 @@ if __name__ == "__main__":
         frames.info[i] = {"box": data[i]}
     frames.transform(annotate_image)
     frames.to_video("data/processed.avi")
+    video.apply_iou()
+    group_entry_exits = video.personalized_data()
+    mask_stats = video.get_mask_stats()
+    print(group_entry_exits)
+    print(mask_stats)
     # frames.render()
