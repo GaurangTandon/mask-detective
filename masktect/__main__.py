@@ -16,6 +16,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # Step 1: Save
     video = VideoAnnotator(args.video)
+    # video.analyze()
     result = video.extract()
     with open("data/analyzed_data.pkl", 'wb') as f:
         pickle.dump(result, f)

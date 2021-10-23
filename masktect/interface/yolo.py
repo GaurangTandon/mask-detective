@@ -58,7 +58,7 @@ class VideoAnnotator:
                 for line in f:
                     c, x, y, w, h = map(float, line.split(' '))
                     # FIXME: Something is very wrong in pixel locations
-                    bounding_boxes.append(Box(label=c, x=y, y=x, w=w, h=h, group=0))
+                    bounding_boxes.append(Box(label=c, x=y, y=x, w=h, h=w, group=0))
             return bounding_boxes
 
         frames_with_bounding_boxes = []
@@ -96,10 +96,11 @@ class VideoAnnotator:
                         annotation_data[index[0]][index[1]].label = label
                     batch_images, batch_indices = [], []
 
-        batch = np.stack(batch_images, axis=0)
-        classification = self.model(batch)
-        classification = np.squeeze(classification >= 0.5)
-        for (index, label) in zip(batch_indices, classification):
-            annotation_data[index[0]][index[1]].label = label
+        if batch_images:
+            batch = np.stack(batch_images, axis=0)
+            classification = self.model(batch)
+            classification = np.squeeze(classification >= 0.5)
+            for (index, label) in zip(batch_indices, classification):
+                annotation_data[index[0]][index[1]].label = label
 
         return annotation_data
