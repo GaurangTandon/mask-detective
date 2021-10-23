@@ -1,8 +1,11 @@
 import albumentations as albu
+import os
+import PIL
 import tensorflow as tf
+import numpy as np
+from matplotlib import pyplot as plt
 
-AUTO = tf.data.experimental.AUTOTUNE
-REPLICAS = 1
+from .config import CFG, REPLICAS, AUTO
 
 
 def get_training_augmentation():
@@ -114,3 +117,44 @@ def get_dataset(files, cfg, is_test=False, shuffle=False, repeat=False,
     ds = ds.prefetch(AUTO)
     return ds
 
+
+def show_dataset(thumb_size, cols, rows, ds):
+    mosaic = PIL.Image.new(mode='RGB', size=(thumb_size * cols + (cols - 1),
+                                             thumb_size * rows + (rows - 1)))
+
+    for idx, data in enumerate(iter(ds)):
+        img, target_or_imgid = data
+        ix = idx % cols
+        iy = idx // cols
+        img = np.clip(img.numpy() * 255, 0, 255).astype(np.uint8)
+        img = PIL.Image.fromarray(img)
+        img = img.resize((thumb_size, thumb_size), resample=PIL.Image.BILINEAR)
+        mosaic.paste(img, (ix * thumb_size + ix,
+                           iy * thumb_size + iy))
+
+    plt.show(mosaic)
+
+
+np.random.seed(42)
+DATASET_PATH = "data/images"
+WITH = "with_mask"
+WITHOUT = "without_mask"
+with_mask = os.listdir(f"{DATASET_PATH}/{WITH}")
+without_mask = os.listdir(f"{DATASET_PATH}/{WITHOUT}")
+# list of (path, label)
+all_files_with_labels = [(f"{DATASET_PATH}/{WITH}/{x}", 1) for x in with_mask] + \
+                            [(f"{DATASET_PATH}/{WITHOUT}/{x}", 0) for x in without_mask]
+np.random.shuffle(all_files_with_labels)
+TRAIN_RATIO = 0.8
+TRAIN_COUNT = int(0.8 * len(all_files_with_labels))
+files_train = all_files_with_labels[:TRAIN_COUNT]
+files_test = [x for x, _ in all_files_with_labels[TRAIN_COUNT:]]
+
+
+def main():
+    ds = get_dataset(files_train, CFG).unbatch().take(12 * 5)
+    show_dataset(64, 12, 5, ds)
+
+
+if __name__ == "__main__":
+    main()
