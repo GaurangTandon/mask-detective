@@ -29,11 +29,17 @@ def build_model():
     return model
 
 
+def load_model():
+    network = build_model()
+    network.load_weights("weights/efficientnetb2.h5")
+    return network
+
+
 def train_model():
     network = build_model()
     callbacks_list = [
         tf.keras.callbacks.ReduceLROnPlateau(
-            monitor="train_loss", patience=2, factor=0.1, verbose=1
+            monitor="loss", patience=2, factor=0.1, verbose=1
         ),
         tf.keras.callbacks.ModelCheckpoint(
             "model_checkpoint",
@@ -49,7 +55,7 @@ def train_model():
         epochs=CONFIG["epochs"],
         callbacks=callbacks_list,
     )
-    network.save("weights/model.h5")
+    network.save("weights/efficientnetb2.h5")
     return history
 
 

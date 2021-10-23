@@ -1,8 +1,11 @@
+import os
 import argparse
 import pickle
 
+from .interface.yolo import VideoAnnotator
 from .interface.video import ImageSequence
 from .tracker.find_faces import find_faces
+from .tracker.image_annotate import annotate_image
 
 
 if __name__ == "__main__":
@@ -11,11 +14,17 @@ if __name__ == "__main__":
         "--video", metavar="V", type=str, help="the video that needs to processed"
     )
     args = parser.parse_args()
-    data = ImageSequence().from_video(args.video, 5)
-    data.transform(find_faces)
-    data.to_video(args.video[:-4] + "_processed.avi")
-    with open("data/video/oxford_1_info.pkl", "wb") as f:
-    data.write_submission(args.video[:-4] + "_submission.txt")
-    with open('data/video/oxford_1_info.pkl', 'wb') as f:
-        pickle.dump(data.info, f)
-    data.render()
+    # Step 1: Save
+    # video = VideoAnnotator(args.video)
+    # result = video.extract()
+    # with open("data/analyzed_data.pkl", 'wb') as f:
+    #     pickle.dump(result, f)
+    # Step 2: Load the annotations and fix
+    with open("data/analyzed_data.pkl", "rb") as f:
+        data = pickle.load(f)
+    frames = ImageSequence(shape=(640, 480)).from_video(args.video, drop_rate=1)
+    for i in range(len(data)):
+        frames.info[i] = {"box": data[i]}
+    frames.transform(annotate_image)
+    frames.to_video("data/processed.avi")
+    frames.render()

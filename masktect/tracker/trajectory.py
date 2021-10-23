@@ -2,6 +2,7 @@ from math import sqrt
 import sys
 from typing import List
 
+
 def read_frame(frame_path: str):
     data = []
     with open(frame_path) as f:
@@ -11,6 +12,7 @@ def read_frame(frame_path: str):
             data.append([c, x, y, w, h, 0])
 
     return data
+
 
 def read_all_frames(frame_basepath: str):
     all_data = []
@@ -23,8 +25,10 @@ def read_all_frames(frame_basepath: str):
         pass
     return all_data
 
+
 VID_WIDTH = 640
 VID_HEIGHT = 480
+
 
 def rel_to_abs(x1, y1, x2, y2):
     x1 *= VID_WIDTH
@@ -33,12 +37,15 @@ def rel_to_abs(x1, y1, x2, y2):
     y2 *= VID_HEIGHT
     return x1, y1, x2, y2
 
+
 def take_dist(x1, y1, x2, y2):
     x1, y1, x2, y2 = rel_to_abs(x1, y1, x2, y2)
     return sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
+
 def get_centroid(box):
     return (box[1] + box[3] / 2, box[2] + box[4] / 2)
+
 
 def apply_iou(video_data):
     THRESH = 1
@@ -49,7 +56,7 @@ def apply_iou(video_data):
         this_frame = video_data[frame_idx]
         next_frame = video_data[frame_idx + 1]
         used = [False for _ in range(len(next_frame))]
-        
+
         for box in this_frame:
             if box[-1] == 0:
                 # does not belong to any group
@@ -73,7 +80,8 @@ def apply_iou(video_data):
                 next_frame[best_idx][-1] = group_number
                 used[best_idx] = True
 
-    return video_data, group_number 
+    return video_data, group_number
+
 
 def personalized_data(grouped_frames, total_groupcount):
     FPS = 15
@@ -99,6 +107,7 @@ def personalized_data(grouped_frames, total_groupcount):
 
     return group_timestamps
 
+
 def get_mask_stats(grouped_frames, total_groupcount: int):
     group_stat = [[0, 0] for _ in range(total_groupcount)]
 
@@ -121,6 +130,7 @@ def get_mask_stats(grouped_frames, total_groupcount: int):
             add_item(box)
 
     return group_stat
+
 
 def main():
     video_name = sys.argv[1]

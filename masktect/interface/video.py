@@ -6,7 +6,7 @@ import tqdm.auto as tqdm
 
 
 class ImageSequence:
-    def __init__(self, shape=(800, 400)):
+    def __init__(self, shape=(640, 480)):
         self.images: typing.List[np.ndarray] = []
         self.info: typing.List[typing.Dict[str, typing.Any]] = []
         self.shape = shape
