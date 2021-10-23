@@ -52,24 +52,6 @@ def get_validation_augmentation():
     return albu.Compose(test_transform)
 
 
-def read_labeled_tfrecord(example):
-    tfrec_format = {
-        'image': tf.io.FixedLenFeature([], tf.string),
-        'label': tf.io.FixedLenFeature([], tf.int64),
-    }           
-    example = tf.io.parse_single_example(example, tfrec_format)
-    return example['image'], example['label']
-
-
-def read_unlabeled_tfrecord(example, return_image_name):
-    tfrec_format = {
-        'image': tf.io.FixedLenFeature([], tf.string),
-        'label': tf.io.FixedLenFeature([], tf.string),
-    }
-    example = tf.io.parse_single_example(example, tfrec_format)
-    return example['image'], example['label'] if return_image_name else 0
-
-
 train_augment = get_training_augmentation()
 val_augment = get_validation_augmentation()
 
@@ -147,7 +129,9 @@ all_files_with_labels = [(f"{DATASET_PATH}/{WITH}/{x}", 1) for x in with_mask] +
 np.random.shuffle(all_files_with_labels)
 TRAIN_RATIO = 0.8
 TRAIN_COUNT = int(0.8 * len(all_files_with_labels))
+# list of tuples (filepath, label)
 files_train = all_files_with_labels[:TRAIN_COUNT]
+# list of filepaths
 files_test = [x for x, _ in all_files_with_labels[TRAIN_COUNT:]]
 
 
