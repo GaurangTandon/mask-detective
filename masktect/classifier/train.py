@@ -24,7 +24,7 @@ def build_model():
     model.compile(
         optimizer=CONFIG["optimizer"],
         loss=loss,
-        metrics=[tf.keras.metrics.Accuracy(name="accuracy")],
+        metrics=["accuracy"],
     )
     return model
 
