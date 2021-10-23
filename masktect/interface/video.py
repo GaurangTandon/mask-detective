@@ -17,7 +17,9 @@ class ImageSequence:
         """
         assert len(self.images) == len(self.info)
         for idx in tqdm.trange(len(self.images)):
-            self.images[idx], self.info[idx] = transformer(self.images[idx], self.info[idx])
+            self.images[idx], self.info[idx] = transformer(
+                self.images[idx], self.info[idx]
+            )
 
     def from_video(self, filename: str, drop_rate: int = 1) -> "ImageSequence":
         """Generates the sequence of images from a given .mp4 file
@@ -31,7 +33,7 @@ class ImageSequence:
                 break
             image = cv.resize(image, self.shape)
             self.images.append(image)
-        self.images = self.images[0:len(self.images):drop_rate]
+        self.images = self.images[0 : len(self.images) : drop_rate]
         self.info = [dict() for _ in self.images]
         return self
 

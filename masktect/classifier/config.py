@@ -1,0 +1,17 @@
+CONFIG = dict(
+    net_count=7,
+    batch_size=16,
+    read_size=256,
+    crop_size=250,
+    net_size=224,
+    epochs=12,
+    rot=180.0,
+    shr=2.0,
+    hzoom=8.0,
+    wzoom=8.0,
+    hshift=8.0,
+    wshift=8.0,
+    optimizer="adam",
+    label_smooth_fac=0.05,
+    tta_steps=25,
+)
