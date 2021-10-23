@@ -57,7 +57,8 @@ class VideoAnnotator:
             with open(frame_path) as f:
                 for line in f:
                     c, x, y, w, h = map(float, line.split(' '))
-                    bounding_boxes.append(Box(label=c, x=x, y=y, w=w, h=h, group=0))
+                    # FIXME: Something is very wrong in pixel locations
+                    bounding_boxes.append(Box(label=c, x=y, y=x, w=w, h=h, group=0))
             return bounding_boxes
 
         frames_with_bounding_boxes = []
