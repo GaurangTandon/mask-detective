@@ -1,4 +1,5 @@
 import argparse
+import pickle
 
 from .interface.video import ImageSequence
 from .tracker.find_faces import find_faces
@@ -13,4 +14,6 @@ if __name__ == "__main__":
     data = ImageSequence().from_video(args.video)
     data.transform(find_faces)
     data.to_video(args.video[:-4] + "_processed.avi")
+    with open('data/video/oxford_1_info.pkl', 'wb') as f:
+        pickle.dump(data.info, f)
     data.render()
