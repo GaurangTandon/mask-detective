@@ -36,6 +36,7 @@ train_augment = albu.Compose(
             ],
             p=0.9,
         ),
+        albu.Resize(50, 50),
     ]
 )
 
