@@ -22,11 +22,21 @@ class Box:
     group: int
 
     def scale_to_image(self, image_shape: typing.Tuple[int, int]):
-        x1, y1 = self.x, self.y
-        x2, y2 = self.x + self.w, self.y + self.h
         img_width, img_height = image_shape[0], image_shape[1]
-        return (int(np.floor(x1 * img_width)), int(np.floor(y1 * img_height))), \
-               (int(np.ceil(x2 * img_width)), int(np.ceil(y2 * img_height)))
+
+        x1, y1 = int((self.x - self.w / 2) * img_width), int((self.y - self.h / 2) * img_height)
+        x2, y2 = int((self.x + self.w / 2) * img_width), int((self.y + self.h / 2) * img_height)
+
+        if x1 < 0:
+            x1 = 0
+        if x2 > img_width - 1:
+            x2 = img_width - 1
+        if y1 < 0:
+            y1 = 0
+        if y2 > img_height - 1:
+            y2 = img_height - 1
+
+        return (x1, y1), (x2, y2)
 
 
 class VideoAnnotator:
@@ -58,7 +68,7 @@ class VideoAnnotator:
                 for line in f:
                     c, x, y, w, h = map(float, line.split(' '))
                     # FIXME: Something is very wrong in pixel locations
-                    bounding_boxes.append(Box(label=c, x=y, y=x, w=h, h=w, group=0))
+                    bounding_boxes.append(Box(label=c, x=y, y=x, w=w, h=h, group=0))
             return bounding_boxes
 
         frames_with_bounding_boxes = []
