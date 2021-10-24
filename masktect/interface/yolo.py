@@ -10,6 +10,7 @@ import tqdm
 from .video import ImageSequence
 from ..classifier.train import load_model
 
+import random
 
 @dataclasses.dataclass
 class Box:
@@ -50,6 +51,7 @@ class VideoAnnotator:
         self.model = load_model()
         self.video_path = video_path
         self.video_sequence = ImageSequence().from_video(self.video_path, drop_rate=1)
+        self.runs_path = ""
 
     def analyze(self):
         os.system(
@@ -60,12 +62,17 @@ class VideoAnnotator:
             --hide-labels --hide-conf --save-txt
         """
         )
+        random_num = random.randint(0, 10000000)
+        self.runs_path = f"weights/yolo/runs/detect/exp-{random_num}"
+        os.system(f"""
+            mv weights/yolo/runs/detect/exp {self.runs_path}
+        """)
 
-    def annotations(self, root_path: str = "weights/yolo/runs/detect/exp/labels/"):
+    def annotations(self):
         """Gets the annotations in a usable format
-        :param root_path: The prefix of all annotation files
         :return: The list for frames of list of dictionary of all bounding boxes
         """
+        root_path = self.runs_path + "/labels"
         frame_basepath = os.path.join(
             root_path, self.video_path.split("/")[-1].split(".")[0]
         )

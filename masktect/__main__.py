@@ -16,8 +16,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # Step 1: Save
     video = VideoAnnotator(args.video)
-    if not os.path.exists("weights/yolo/runs/detect/exp/labels/"):
-        video.analyze()
+    video.analyze()
     result = video.extract()
     with open("data/analyzed_data.pkl", "wb") as f:
         pickle.dump(result, f)
@@ -30,7 +29,7 @@ if __name__ == "__main__":
     frames.transform(annotate_image)
     frames.to_video("data/processed.avi")
     # Step 3: Compute the Trajectories
-    tracker = PersonTracker(video.analyze())
+    tracker = PersonTracker(video.annotations())
     tracker.apply_iou()
     print(tracker.person_timestamps())
     print(tracker.person_mask())
