@@ -70,7 +70,7 @@ class VideoAnnotator:
         """Gets the annotations in a usable format
         :return: The list for frames of list of dictionary of all bounding boxes
         """
-        root_path = "weights/yolo/runs/detect/exp12/labels"
+        root_path = "weights/yolo/runs/detect/exp/labels"
         frame_basepath = os.path.join(
             root_path, self.video_path.split("/")[-1].split(".")[0]
         )
