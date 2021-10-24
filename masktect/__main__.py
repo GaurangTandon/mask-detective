@@ -10,22 +10,18 @@ from .interface.person import PersonTracker
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=".")
-    parser.add_argument(
-        "--video", metavar="V", type=str, help="the video that needs to processed"
-    )
+    parser.add_argument("--video", metavar="V", type=str, help="the video that needs to processed")
     args = parser.parse_args()
-    # Step 1: Save
+    # Step 1: Compute YOLO Annotations and fix with Efficient Net
     video = VideoAnnotator(args.video)
     video.analyze()
     result = video.extract()
     with open("data/analyzed_data.pkl", "wb") as f:
         pickle.dump(result, f)
-    # Step 2: Load the annotations and fix
     with open("data/analyzed_data.pkl", "rb") as f:
         data = pickle.load(f)
     frames = ImageSequence(shape=(640, 480)).from_video(args.video, drop_rate=1)
-
-    # Step 3: Compute the Trajectories
+    # Step 2: Compute the Trajectories
     tracker = PersonTracker(data)
     tracker.apply_iou()
     person_ts = tracker.person_timestamps()
@@ -34,8 +30,8 @@ if __name__ == "__main__":
     EXISTENCE_FPS_THRESHOLD = 2 * FPS
     EXISTENCE_TIME_THRESHOLD = EXISTENCE_FPS_THRESHOLD / FPS
 
-    # delete artifacts on bounding boxes
-    # fringe effects in yolov5
+    # Step 3: Writing out the files as submissions
+    # delete artifacts on bounding boxes fringe effects in yolov5
     for frame in tracker.annotation_data:
         for box in frame:
             group = box.group
@@ -79,5 +75,4 @@ if __name__ == "__main__":
             masked_roi = ";".join(map(lambda x: ",".join(map(str, x)), roi[0]))
             f.write(f'{frame},{mask_off_count},{mask_on_count},{non_masked_roi},{masked_roi}\n')
 
-    exit(1)
     tracker.train_model(video.model, video.video_sequence)
