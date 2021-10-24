@@ -1,9 +1,3 @@
-import os
-
-import numpy as np
-from matplotlib import pyplot as plt
-
-import tensorflow as tf
 import albumentations as albu
 
 from ImageDataAugmentor.image_data_augmentor import ImageDataAugmentor

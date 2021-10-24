@@ -31,9 +31,9 @@ class ImageSequence:
             success, image = video.read()
             if not success:
                 break
-            image = cv.resize(image, self.shape)
+            # image = cv.resize(image, self.shape)
             self.images.append(image)
-        self.images = self.images[0:len(self.images):drop_rate]
+        self.images = self.images[0 : len(self.images) : drop_rate]
         self.info = [dict() for _ in self.images]
         return self
 
@@ -58,7 +58,7 @@ class ImageSequence:
     def write_submission(self, path):
         # top left and bottom right
         get_placer = lambda box: ",".join(map(str, box))
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             for idx, record in enumerate(self.info):
                 faces = len(record)
                 positions = ";".join(get_placer(data["box"]) for data in record)
