@@ -61,7 +61,7 @@ class VideoAnnotator:
             f"""
             python weights/yolo/detect.py --weights weights/yolo.pt \\
             --source {self.video_path} \\
-            --conf-thres 0.25 --iou-thres 0.45 --device 'cpu' \\
+            --conf-thres 0.25 --iou-thres 0.3 --device 'cpu' \\
             --hide-labels --hide-conf --save-txt
         """
         )

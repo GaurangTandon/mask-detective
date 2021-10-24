@@ -15,11 +15,11 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     # Step 1: Save
-    # video = VideoAnnotator(args.video)
-    # video.analyze()
-    # result = video.extract()
-    # with open("data/analyzed_data.pkl", "wb") as f:
-    #     pickle.dump(result, f)
+    video = VideoAnnotator(args.video)
+    video.analyze()
+    result = video.extract()
+    with open("data/analyzed_data.pkl", "wb") as f:
+        pickle.dump(result, f)
     # Step 2: Load the annotations and fix
     with open("data/analyzed_data.pkl", "rb") as f:
         data = pickle.load(f)
