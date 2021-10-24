@@ -23,12 +23,13 @@ class Box:
 
     def scale_to_image(self, image_shape: typing.Tuple[int, int, int]):
         img_height, img_width, _ = image_shape
+        scalefactor = 1.5
 
-        x1, y1 = int((self.x - self.w / 2) * img_width), int(
-            (self.y - self.h / 2) * img_height
+        x1, y1 = int((self.x - (self.w * scalefactor) / 2) * img_width), int(
+            (self.y - (self.h * scalefactor) / 2) * img_height
         )
-        x2, y2 = int((self.x + self.w / 2) * img_width), int(
-            (self.y + self.h / 2) * img_height
+        x2, y2 = int((self.x + (self.w * scalefactor) / 2) * img_width), int(
+            (self.y + (self.h * scalefactor) / 2) * img_height
         )
 
         if x1 < 0:
