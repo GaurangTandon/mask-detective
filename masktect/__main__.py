@@ -50,7 +50,7 @@ if __name__ == "__main__":
     frames.to_video("data/processed.avi")
 
     with open('submission.txt', 'w') as f:
-        f.write(f'Group\tFrames with mask on\tFrames with mask off\tEntry timestamp\tExit timestamp')
+        f.write(f'Group\tFrames with mask on\tFrames with mask off\tEntry timestamp\tExit timestamp\n')
         for group in range(1, tracker.number_of_people + 1):
             entry_frame, exit_frame = person_ts[group]
             entry_ts = entry_frame / FPS
@@ -73,9 +73,9 @@ if __name__ == "__main__":
                 if box.group == 0:
                     continue
                 roi[box.label].append(box.get_xywh(frames.images[0].shape))
-            mask_off_count = len(roi[0])
-            mask_on_count = len(roi[1])
-            non_masked_roi = ";".join(map(lambda x: ",".join(map(str, x)), roi[0]))
+            mask_off_count = len(roi[1])
+            mask_on_count = len(roi[0])
+            non_masked_roi = ";".join(map(lambda x: ",".join(map(str, x)), roi[1]))
             masked_roi = ";".join(map(lambda x: ",".join(map(str, x)), roi[0]))
             f.write(f'{frame},{mask_off_count},{mask_on_count},{non_masked_roi},{masked_roi}\n')
 
