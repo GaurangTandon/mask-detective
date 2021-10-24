@@ -45,13 +45,16 @@ class Box:
     def get_centroid(self):
         return self.x, self.y
 
+    def get_xywh(self, image_shape):
+        (x1, y1), (x2, y2) = self.scale_to_image(image_shape)
+        return x1, y1, x2 - x1, y2 - y1
+
 
 class VideoAnnotator:
     def __init__(self, video_path):
         self.model = load_model()
         self.video_path = video_path
         self.video_sequence = ImageSequence().from_video(self.video_path, drop_rate=1)
-        self.runs_path = ""
 
     def analyze(self):
         os.system(
@@ -62,17 +65,12 @@ class VideoAnnotator:
             --hide-labels --hide-conf --save-txt
         """
         )
-        random_num = random.randint(0, 10000000)
-        self.runs_path = f"weights/yolo/runs/detect/exp-{random_num}"
-        os.system(f"""
-            mv weights/yolo/runs/detect/exp {self.runs_path}
-        """)
 
     def annotations(self):
         """Gets the annotations in a usable format
         :return: The list for frames of list of dictionary of all bounding boxes
         """
-        root_path = self.runs_path + "/labels"
+        root_path = "weights/yolo/runs/detect/exp11/labels"
         frame_basepath = os.path.join(
             root_path, self.video_path.split("/")[-1].split(".")[0]
         )
@@ -93,6 +91,8 @@ class VideoAnnotator:
                 frames_with_bounding_boxes.append(data)
         except FileNotFoundError:
             pass
+        # os.system(f"rm -r {root_path}")
+
         return frames_with_bounding_boxes
 
     def extract(self):
@@ -112,6 +112,7 @@ class VideoAnnotator:
                 # print(x1, y1, x2, y2, image.shape)
                 image = image[y1:y2, x1:x2]
                 image = cv.resize(image, (224, 224))
+                image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
                 batch_images.append(image)
                 batch_indices.append((frame_idx, box_idx))
                 if len(batch_images) == max_batch_size:

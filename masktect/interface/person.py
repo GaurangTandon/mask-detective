@@ -1,4 +1,6 @@
 import typing
+import cv2 as cv
+import tqdm
 
 import numpy as np
 
@@ -41,12 +43,12 @@ class PersonTracker:
                         continue
                     centroid_b1 = box_1.get_centroid()
                     centroid_b2 = box_2.get_centroid()
-                    dist = point_distance(centroid_b1, centroid_b2)
+                    dist = self.point_distance(centroid_b1, centroid_b2)
                     if best_dist_idx == -1 or dist < best_dist:
                         best_dist = dist
                         best_dist_idx = other
 
-                if best_dist_idx != -1 and best_dist <= DISTANCE_THRESHOLD:
+                if best_dist_idx != -1 and best_dist <= self.DISTANCE_THRESHOLD:
                     next_frame[best_dist_idx].group = group_number
                     used[best_dist_idx] = True
 
@@ -58,7 +60,7 @@ class PersonTracker:
         ]
         curr_groups = set([])
 
-        for frame in self.annotation_data:
+        for frame_idx, frame in enumerate(self.annotation_data):
             seen_now = set([])
             for box in frame:
                 group = box.group
@@ -66,11 +68,11 @@ class PersonTracker:
                 if group in curr_groups:
                     continue
                 curr_groups.add(group)
-                group_timestamps[group][0] = frame
+                group_timestamps[group][0] = frame_idx
 
             for group in curr_groups:
                 if group not in seen_now:
-                    group_timestamps[group][1] = frame
+                    group_timestamps[group][1] = frame_idx
 
         return group_timestamps
 
@@ -87,7 +89,7 @@ class PersonTracker:
         person_mask_values = self.person_mask()
 
         batch_images, batch_labels = [], []
-        max_batch_size = 32
+        max_batch_size = 512
 
         for frame_idx, frame in tqdm.tqdm(
             enumerate(self.annotation_data), total=len(self.annotation_data)
@@ -97,6 +99,7 @@ class PersonTracker:
                 (x1, y1), (x2, y2) = box.scale_to_image(image_shape=image.shape)
                 image = image[y1:y2, x1:x2]
                 image = cv.resize(image, (224, 224))
+                image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
 
                 with_mask, without_mask = person_mask_values[box.group]
                 if abs(with_mask - without_mask) / (with_mask + without_mask) < 0.4:
@@ -115,3 +118,5 @@ class PersonTracker:
             batch_images = np.stack(batch_images, axis=0)
             batch_labels = np.expand_dims(np.array(batch_labels), axis=1)
             model.fit(batch_images, batch_labels, epochs=1)
+
+        model.save('weights/best_tracker_model.h5')
