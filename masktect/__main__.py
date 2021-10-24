@@ -15,11 +15,11 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     # Step 1: Save
-    video = VideoAnnotator(args.video)
+    # video = VideoAnnotator(args.video)
     # video.analyze()
-    result = video.extract()
-    with open("data/analyzed_data.pkl", "wb") as f:
-        pickle.dump(result, f)
+    # result = video.extract()
+    # with open("data/analyzed_data.pkl", "wb") as f:
+    #     pickle.dump(result, f)
     # Step 2: Load the annotations and fix
     with open("data/analyzed_data.pkl", "rb") as f:
         data = pickle.load(f)
@@ -31,6 +31,8 @@ if __name__ == "__main__":
     person_ts = tracker.person_timestamps()
     person_msk = tracker.person_mask()
     FPS = 15
+    EXISTENCE_FPS_THRESHOLD = 2 * FPS
+    EXISTENCE_TIME_THRESHOLD = EXISTENCE_FPS_THRESHOLD / FPS
 
     # delete artifacts on bounding boxes
     # fringe effects in yolov5
@@ -38,10 +40,8 @@ if __name__ == "__main__":
         for box in frame:
             group = box.group
             exists_long = person_ts[group][1] - person_ts[group][0]
-            if group == 47:
-                print(exists_long, group, person_ts[group])
             # exists for less than one second (15 fps)
-            if exists_long < FPS:
+            if exists_long < EXISTENCE_FPS_THRESHOLD:
                 box.group = 0
 
     for i in range(len(tracker.annotation_data)):
@@ -49,7 +49,6 @@ if __name__ == "__main__":
     frames.transform(annotate_image)
     frames.to_video("data/processed.avi")
 
-    exit(1)
     with open('submission.txt', 'w') as f:
         f.write(f'Group\tFrames with mask on\tFrames with mask off\tEntry timestamp\tExit timestamp')
         for group in range(1, tracker.number_of_people + 1):
@@ -58,7 +57,7 @@ if __name__ == "__main__":
             exit_ts = exit_frame / FPS
             exists_long = exit_ts - entry_ts
             # exists for less than one second
-            if exists_long < 1:
+            if exists_long < EXISTENCE_TIME_THRESHOLD:
                 continue
             entry_ts = round(entry_ts * 1000) / 1e3
             exit_ts = round(exit_ts * 1000) / 1e3
@@ -80,4 +79,5 @@ if __name__ == "__main__":
             masked_roi = ";".join(map(lambda x: ",".join(map(str, x)), roi[0]))
             f.write(f'{frame}\t{mask_off_count}\t{mask_on_count}\t{non_masked_roi}\t{masked_roi}\n')
 
+    exit(1)
     tracker.train_model(video.model, video.video_sequence)

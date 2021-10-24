@@ -74,9 +74,13 @@ class PersonTracker:
                 curr_groups.add(group)
                 group_timestamps[group][0] = frame_idx
 
+            gone_groups = set([])
             for group in curr_groups:
                 if group not in seen_now:
                     group_timestamps[group][1] = frame_idx
+                    gone_groups.add(group)
+            for group in gone_groups:
+                curr_groups.remove(group)
 
         for ts in group_timestamps:
             if ts[1] == -1:
