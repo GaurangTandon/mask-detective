@@ -1,11 +1,13 @@
 import typing
+import cv2 as cv
+import tqdm
 
 import numpy as np
 
 
 class PersonTracker:
 
-    DISTANCE_THRESHOLD = 1  # decide good threshold
+    DISTANCE_THRESHOLD = 10  # decide good threshold
     FRAMES_PER_SECOND = 15
 
     def __init__(self, annotations):
@@ -22,43 +24,47 @@ class PersonTracker:
         return np.sqrt(dx ** 2 + dy ** 2)
 
     def apply_iou(self):
-        group_number = 1
+        group_count = 0
 
         for frame_idx in range(0, len(self.annotation_data) - 1):
             this_frame = self.annotation_data[frame_idx]
             next_frame = self.annotation_data[frame_idx + 1]
             used = [False for _ in range(len(next_frame))]
 
-            for box_1 in this_frame:
+            for box_1_index in range(len(this_frame)):
+                box_1 = this_frame[box_1_index]
                 if box_1.group == 0:
                     # does not belong to any group
-                    box_1.group = group_number
-                    group_number += 1
+                    group_count += 1
+                    box_1.group = group_count
 
                 best_dist, best_dist_idx = 1e15, -1
-                for other, box_2 in enumerate(next_frame):
-                    if used[other]:
+                for box_2_index in range(len(next_frame)):
+                    if used[box_2_index]:
                         continue
+                    box_2 = next_frame[box_2_index]
                     centroid_b1 = box_1.get_centroid()
                     centroid_b2 = box_2.get_centroid()
-                    dist = point_distance(centroid_b1, centroid_b2)
+                    dist = self.point_distance(centroid_b1, centroid_b2)
                     if best_dist_idx == -1 or dist < best_dist:
                         best_dist = dist
-                        best_dist_idx = other
+                        best_dist_idx = box_2_index
 
-                if best_dist_idx != -1 and best_dist <= DISTANCE_THRESHOLD:
-                    next_frame[best_dist_idx].group = group_number
+                if best_dist_idx != -1 and best_dist <= self.DISTANCE_THRESHOLD:
+                    next_frame[best_dist_idx].group = box_1.group
                     used[best_dist_idx] = True
 
-        self.number_of_people = group_number
+        self.number_of_people = group_count
 
     def person_timestamps(self):
         group_timestamps: typing.List[typing.List[int]] = [
-            [-1, -1] for _ in range(self.number_of_people)
+            [-1, -1] for _ in range(self.number_of_people + 1)
         ]
         curr_groups = set([])
+        total_frames = 0
 
-        for frame in self.annotation_data:
+        for frame_idx, frame in enumerate(self.annotation_data):
+            total_frames = frame_idx
             seen_now = set([])
             for box in frame:
                 group = box.group
@@ -66,16 +72,24 @@ class PersonTracker:
                 if group in curr_groups:
                     continue
                 curr_groups.add(group)
-                group_timestamps[group][0] = frame
+                group_timestamps[group][0] = frame_idx
 
+            gone_groups = set([])
             for group in curr_groups:
                 if group not in seen_now:
-                    group_timestamps[group][1] = frame
+                    group_timestamps[group][1] = frame_idx
+                    gone_groups.add(group)
+            for group in gone_groups:
+                curr_groups.remove(group)
+
+        for ts in group_timestamps:
+            if ts[1] == -1:
+                ts[1] = total_frames
 
         return group_timestamps
 
     def person_mask(self):
-        group_stat = [[0, 0] for _ in range(self.number_of_people)]
+        group_stat = [[0, 0] for _ in range(self.number_of_people + 1)]
 
         for frame in self.annotation_data:
             for box in frame:
@@ -87,7 +101,7 @@ class PersonTracker:
         person_mask_values = self.person_mask()
 
         batch_images, batch_labels = [], []
-        max_batch_size = 32
+        max_batch_size = 512
 
         for frame_idx, frame in tqdm.tqdm(
             enumerate(self.annotation_data), total=len(self.annotation_data)
@@ -97,6 +111,7 @@ class PersonTracker:
                 (x1, y1), (x2, y2) = box.scale_to_image(image_shape=image.shape)
                 image = image[y1:y2, x1:x2]
                 image = cv.resize(image, (224, 224))
+                image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
 
                 with_mask, without_mask = person_mask_values[box.group]
                 if abs(with_mask - without_mask) / (with_mask + without_mask) < 0.4:
@@ -115,3 +130,5 @@ class PersonTracker:
             batch_images = np.stack(batch_images, axis=0)
             batch_labels = np.expand_dims(np.array(batch_labels), axis=1)
             model.fit(batch_images, batch_labels, epochs=1)
+
+        model.save('weights/best_tracker_model.h5')

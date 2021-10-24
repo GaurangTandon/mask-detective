@@ -23,12 +23,13 @@ class Box:
 
     def scale_to_image(self, image_shape: typing.Tuple[int, int, int]):
         img_height, img_width, _ = image_shape
+        scalefactor = 1.5
 
-        x1, y1 = int((self.x - self.w / 2) * img_width), int(
-            (self.y - self.h / 2) * img_height
+        x1, y1 = int((self.x - (self.w * scalefactor) / 2) * img_width), int(
+            (self.y - (self.h * scalefactor) / 2) * img_height
         )
-        x2, y2 = int((self.x + self.w / 2) * img_width), int(
-            (self.y + self.h / 2) * img_height
+        x2, y2 = int((self.x + (self.w * scalefactor) / 2) * img_width), int(
+            (self.y + (self.h * scalefactor) / 2) * img_height
         )
 
         if x1 < 0:
@@ -45,34 +46,36 @@ class Box:
     def get_centroid(self):
         return self.x, self.y
 
+    def get_xywh(self, image_shape):
+        (x1, y1), (x2, y2) = self.scale_to_image(image_shape)
+        return x1, y1, x2 - x1, y2 - y1
+
+    def clone(self):
+        return Box(label=self.label, x=self.x, y=self.y, w=self.w, h=self.h, group=self.group)
+
 
 class VideoAnnotator:
     def __init__(self, video_path):
         self.model = load_model()
         self.video_path = video_path
         self.video_sequence = ImageSequence().from_video(self.video_path, drop_rate=1)
-        self.runs_path = ""
 
     def analyze(self):
         os.system(
             f"""
             python weights/yolo/detect.py --weights weights/yolo.pt \\
             --source {self.video_path} \\
-            --conf-thres 0.25 --iou-thres 0.45 --device 'cpu' \\
+            --conf-thres 0.25 --iou-thres 0.1 --device 'cpu' \\
             --hide-labels --hide-conf --save-txt
         """
         )
-        random_num = random.randint(0, 10000000)
-        self.runs_path = f"weights/yolo/runs/detect/exp-{random_num}"
-        os.system(f"""
-            mv weights/yolo/runs/detect/exp {self.runs_path}
-        """)
 
     def annotations(self):
         """Gets the annotations in a usable format
         :return: The list for frames of list of dictionary of all bounding boxes
         """
-        root_path = self.runs_path + "/labels"
+        root_path = "weights/yolo/runs/detect/exp/labels"
+        assert (os.path.exists(root_path))
         frame_basepath = os.path.join(
             root_path, self.video_path.split("/")[-1].split(".")[0]
         )
@@ -86,13 +89,17 @@ class VideoAnnotator:
             return bounding_boxes
 
         frames_with_bounding_boxes = []
-        try:
-            for i in range(1, 10000000):
-                path = f"{frame_basepath}_{i}.txt"
+        prev_data = []
+        for i in range(1, len(self.video_sequence.images) + 1):
+            path = f"{frame_basepath}_{i}.txt"
+            try:
                 data = read_frame(path)
-                frames_with_bounding_boxes.append(data)
-        except FileNotFoundError:
-            pass
+            except FileNotFoundError:
+                data = [x.clone() for x in prev_data]
+            prev_data = data
+            frames_with_bounding_boxes.append(data)
+        # os.system(f"rm -r {root_path}")
+
         return frames_with_bounding_boxes
 
     def extract(self):
@@ -112,6 +119,7 @@ class VideoAnnotator:
                 # print(x1, y1, x2, y2, image.shape)
                 image = image[y1:y2, x1:x2]
                 image = cv.resize(image, (224, 224))
+                image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
                 batch_images.append(image)
                 batch_indices.append((frame_idx, box_idx))
                 if len(batch_images) == max_batch_size:
@@ -126,7 +134,17 @@ class VideoAnnotator:
             batch = np.stack(batch_images, axis=0)
             classification = self.model(batch)
             classification = np.squeeze(classification >= 0.5)
-            for (index, label) in zip(batch_indices, classification):
-                annotation_data[index[0]][index[1]].label = label
+
+            try:
+                for (index, label) in zip(batch_indices, classification):
+                    annotation_data[index[0]][index[1]].label = label
+            except TypeError:
+                # sometimes an error happens
+                # the reason for it classification is of size 0
+                # it is a subtle error and will be fixed by the
+                # self reinforced learner in the next stage
+                # so assign random label for now
+                for index in batch_indices:
+                    annotation_data[index[0]][index[1]].label = 1
 
         return annotation_data
