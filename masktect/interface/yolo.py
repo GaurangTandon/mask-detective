@@ -12,6 +12,8 @@ import tqdm
 from .video import ImageSequence
 from ..classifier.train import load_model
 
+from matplotlib import pyplot as plt
+
 VID_WIDTH = 640
 
 VID_HEIGHT = 480
@@ -71,7 +73,7 @@ class VideoAnnotator:
             --hide-labels --hide-conf --save-txt
         """)
 
-    def annotations(self, root_path: str = "weights/yolo/runs/detect/exp9/labels/"):
+    def annotations(self, root_path: str = "weights/yolo/runs/detect/exp/labels/"):
         """
         Gets the annotations in a usable format
         :param root_path: The prefix of all annotation files
@@ -112,6 +114,8 @@ class VideoAnnotator:
                 (x1, y1), (x2, y2) = box.scale_to_image(image_shape=image.shape)
                 # print(x1, y1, x2, y2, image.shape)
                 image = image[y1:y2, x1:x2]
+                plt.imshow(cv.cvtColor(image, cv.COLOR_BGR2RGB))
+                plt.show()
                 image = cv.resize(image, (224, 224))
                 batch_images.append(image)
                 batch_indices.append((frame_idx, box_idx))
