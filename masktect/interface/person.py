@@ -7,7 +7,7 @@ import numpy as np
 
 class PersonTracker:
 
-    DISTANCE_THRESHOLD = 5  # decide good threshold
+    DISTANCE_THRESHOLD = 10  # decide good threshold
     FRAMES_PER_SECOND = 15
 
     def __init__(self, annotations):
@@ -61,8 +61,10 @@ class PersonTracker:
             [-1, -1] for _ in range(self.number_of_people + 1)
         ]
         curr_groups = set([])
+        total_frames = 0
 
         for frame_idx, frame in enumerate(self.annotation_data):
+            total_frames = frame_idx
             seen_now = set([])
             for box in frame:
                 group = box.group
@@ -75,6 +77,10 @@ class PersonTracker:
             for group in curr_groups:
                 if group not in seen_now:
                     group_timestamps[group][1] = frame_idx
+
+        for ts in group_timestamps:
+            if ts[1] == -1:
+                ts[1] = total_frames
 
         return group_timestamps
 

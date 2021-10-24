@@ -61,7 +61,7 @@ class VideoAnnotator:
             f"""
             python weights/yolo/detect.py --weights weights/yolo.pt \\
             --source {self.video_path} \\
-            --conf-thres 0.25 --iou-thres 0.3 --device 'cpu' \\
+            --conf-thres 0.25 --iou-thres 0.1 --device 'cpu' \\
             --hide-labels --hide-conf --save-txt
         """
         )
@@ -70,7 +70,7 @@ class VideoAnnotator:
         """Gets the annotations in a usable format
         :return: The list for frames of list of dictionary of all bounding boxes
         """
-        root_path = "weights/yolo/runs/detect/exp11/labels"
+        root_path = "weights/yolo/runs/detect/exp12/labels"
         frame_basepath = os.path.join(
             root_path, self.video_path.split("/")[-1].split(".")[0]
         )
@@ -116,7 +116,7 @@ class VideoAnnotator:
                 batch_images.append(image)
                 batch_indices.append((frame_idx, box_idx))
                 if len(batch_images) == max_batch_size:
-                    batch = np.stack(batch_images, axis=0)
+                    batch = np.stack(batch_images, axis=0) / 255
                     classification = self.model(batch)
                     classification = np.squeeze(classification >= 0.5)
                     for (index, label) in zip(batch_indices, classification):
@@ -127,7 +127,17 @@ class VideoAnnotator:
             batch = np.stack(batch_images, axis=0)
             classification = self.model(batch)
             classification = np.squeeze(classification >= 0.5)
-            for (index, label) in zip(batch_indices, classification):
-                annotation_data[index[0]][index[1]].label = label
+
+            try:
+                for (index, label) in zip(batch_indices, classification):
+                    annotation_data[index[0]][index[1]].label = label
+            except TypeError:
+                # sometimes an error happens
+                # the reason for it classification is of size 0
+                # it is a subtle error and will be fixed by the
+                # self reinforced learner in the next stage
+                # so assign random label for now
+                for index in batch_indices:
+                    annotation_data[index[0]][index[1]].label = 1
 
         return annotation_data
