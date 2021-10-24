@@ -65,7 +65,7 @@ if __name__ == "__main__":
             f.write(f'{group}\t{mask_on}\t{mask_off}\t{entry_ts}\t{exit_ts}\n')
 
     with open('submission.csv', 'w') as f:
-        f.write(f'Frame\tTotal non-masked faces\tTotal masked faces\tNon-masked Face ROIs\tMasked Face ROIs')
+        f.write(f'Frame,Total non-masked faces,Total masked faces,Non-masked Face ROIs,Masked Face ROIs\n')
         for frame, frame_data in enumerate(tracker.annotation_data):
             # no mask, mask
             roi = [[], []]
@@ -77,7 +77,7 @@ if __name__ == "__main__":
             mask_on_count = len(roi[1])
             non_masked_roi = ";".join(map(lambda x: ",".join(map(str, x)), roi[0]))
             masked_roi = ";".join(map(lambda x: ",".join(map(str, x)), roi[0]))
-            f.write(f'{frame}\t{mask_off_count}\t{mask_on_count}\t{non_masked_roi}\t{masked_roi}\n')
+            f.write(f'{frame},{mask_off_count},{mask_on_count},{non_masked_roi},{masked_roi}\n')
 
     exit(1)
     tracker.train_model(video.model, video.video_sequence)
