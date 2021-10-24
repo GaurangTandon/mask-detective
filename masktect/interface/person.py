@@ -7,7 +7,7 @@ import numpy as np
 
 class PersonTracker:
 
-    DISTANCE_THRESHOLD = 1  # decide good threshold
+    DISTANCE_THRESHOLD = 5  # decide good threshold
     FRAMES_PER_SECOND = 15
 
     def __init__(self, annotations):
@@ -24,39 +24,41 @@ class PersonTracker:
         return np.sqrt(dx ** 2 + dy ** 2)
 
     def apply_iou(self):
-        group_number = 1
+        group_count = 0
 
         for frame_idx in range(0, len(self.annotation_data) - 1):
             this_frame = self.annotation_data[frame_idx]
             next_frame = self.annotation_data[frame_idx + 1]
             used = [False for _ in range(len(next_frame))]
 
-            for box_1 in this_frame:
+            for box_1_index in range(len(this_frame)):
+                box_1 = this_frame[box_1_index]
                 if box_1.group == 0:
                     # does not belong to any group
-                    box_1.group = group_number
-                    group_number += 1
+                    group_count += 1
+                    box_1.group = group_count
 
                 best_dist, best_dist_idx = 1e15, -1
-                for other, box_2 in enumerate(next_frame):
-                    if used[other]:
+                for box_2_index in range(len(next_frame)):
+                    if used[box_2_index]:
                         continue
+                    box_2 = next_frame[box_2_index]
                     centroid_b1 = box_1.get_centroid()
                     centroid_b2 = box_2.get_centroid()
                     dist = self.point_distance(centroid_b1, centroid_b2)
                     if best_dist_idx == -1 or dist < best_dist:
                         best_dist = dist
-                        best_dist_idx = other
+                        best_dist_idx = box_2_index
 
                 if best_dist_idx != -1 and best_dist <= self.DISTANCE_THRESHOLD:
-                    next_frame[best_dist_idx].group = group_number
+                    next_frame[best_dist_idx].group = box_1.group
                     used[best_dist_idx] = True
 
-        self.number_of_people = group_number
+        self.number_of_people = group_count
 
     def person_timestamps(self):
         group_timestamps: typing.List[typing.List[int]] = [
-            [-1, -1] for _ in range(self.number_of_people)
+            [-1, -1] for _ in range(self.number_of_people + 1)
         ]
         curr_groups = set([])
 
@@ -77,7 +79,7 @@ class PersonTracker:
         return group_timestamps
 
     def person_mask(self):
-        group_stat = [[0, 0] for _ in range(self.number_of_people)]
+        group_stat = [[0, 0] for _ in range(self.number_of_people + 1)]
 
         for frame in self.annotation_data:
             for box in frame:

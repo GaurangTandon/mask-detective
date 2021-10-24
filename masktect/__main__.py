@@ -15,7 +15,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     # Step 1: Save
-    video = VideoAnnotator(args.video)
+    # video = VideoAnnotator(args.video)
     # video.analyze()
     # result = video.extract()
     # with open("data/analyzed_data.pkl", "wb") as f:
@@ -37,10 +37,11 @@ if __name__ == "__main__":
     frames.transform(annotate_image)
     frames.to_video("data/processed.avi")
 
+    exit(1)
     with open('submission.txt', 'w') as f:
         FPS = 15
         f.write(f'Group\tFrames with mask on\tFrames with mask off\tEntry timestamp\tExit timestamp')
-        for group in range(tracker.number_of_people):
+        for group in range(1, tracker.number_of_people + 1):
             entry_frame, exit_frame = person_ts[group]
             entry_ts = entry_frame / FPS
             exit_ts = exit_frame / FPS

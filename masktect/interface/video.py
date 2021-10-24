@@ -31,7 +31,7 @@ class ImageSequence:
             success, image = video.read()
             if not success:
                 break
-            # image = cv.resize(image, self.shape)
+            image = cv.resize(image, self.shape)
             self.images.append(image)
         self.images = self.images[0 : len(self.images) : drop_rate]
         self.info = [dict() for _ in self.images]

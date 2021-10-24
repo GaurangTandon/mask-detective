@@ -13,7 +13,7 @@ def annotate_image(image: np.ndarray, info: typing.Dict[str, typing.List[Box]]):
         color = (255, 0, 0) if box.label else (0, 255, 0)
 
         (wt, _ht), _ = cv.getTextSize(label, cv.FONT_HERSHEY_SIMPLEX, 0.3, 1)
-        cv.rectangle(image, (x1, y1 - 20), (x2, y1), color, -1)
+        cv.rectangle(image, (x1, y1 - 20), (x1 + wt, y1), color, -1)
         cv.putText(
             image, label, (x1, y1 - 5), cv.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1
         )
