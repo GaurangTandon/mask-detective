@@ -50,6 +50,9 @@ class Box:
         (x1, y1), (x2, y2) = self.scale_to_image(image_shape)
         return x1, y1, x2 - x1, y2 - y1
 
+    def clone(self):
+        return Box(label=self.label, x=self.x, y=self.y, w=self.w, h=self.h, group=self.group)
+
 
 class VideoAnnotator:
     def __init__(self, video_path):
@@ -72,6 +75,7 @@ class VideoAnnotator:
         :return: The list for frames of list of dictionary of all bounding boxes
         """
         root_path = "weights/yolo/runs/detect/exp/labels"
+        assert (os.path.exists(root_path))
         frame_basepath = os.path.join(
             root_path, self.video_path.split("/")[-1].split(".")[0]
         )
@@ -85,13 +89,15 @@ class VideoAnnotator:
             return bounding_boxes
 
         frames_with_bounding_boxes = []
-        try:
-            for i in range(1, 10000000):
-                path = f"{frame_basepath}_{i}.txt"
+        prev_data = []
+        for i in range(1, len(self.video_sequence.images) + 1):
+            path = f"{frame_basepath}_{i}.txt"
+            try:
                 data = read_frame(path)
-                frames_with_bounding_boxes.append(data)
-        except FileNotFoundError:
-            pass
+            except FileNotFoundError:
+                data = [x.clone() for x in prev_data]
+            prev_data = data
+            frames_with_bounding_boxes.append(data)
         # os.system(f"rm -r {root_path}")
 
         return frames_with_bounding_boxes
@@ -117,7 +123,7 @@ class VideoAnnotator:
                 batch_images.append(image)
                 batch_indices.append((frame_idx, box_idx))
                 if len(batch_images) == max_batch_size:
-                    batch = np.stack(batch_images, axis=0) / 255
+                    batch = np.stack(batch_images, axis=0)
                     classification = self.model(batch)
                     classification = np.squeeze(classification >= 0.5)
                     for (index, label) in zip(batch_indices, classification):

@@ -42,7 +42,7 @@ class ImageSequence:
         :param filename: Name of the video file to write to
         """
         print(filename)
-        video = cv.VideoWriter(filename, 0, 1, self.shape)
+        video = cv.VideoWriter(filename, 0, 15, self.shape)
         for image in self.images:
             video.write(image)
         video.release()
