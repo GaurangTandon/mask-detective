@@ -4,6 +4,8 @@ Our take on the problem statement by Qualcomm in Megathon 2021. Summary of the p
 
 > Given a video sequence, you are required to detect all the faces in every frame, classify each face as masked or non-masked, uniquely identify each person and track the duration for which each person is masked and non-masked.
 
+Our team is **OccamsRazor**, members are Animesh Sinha, Kanish Anand and myself.
+
 ## Solution outline
 
 ### Person tracker 
